@@ -42,5 +42,21 @@ def save_workouts():
         line = w["type"] + "|" + w["date"] + "|" + w["amount"] + "|" + w["unit"] + "\n"
         file.write(line)
     file.close()
- 
+
+"""
+    The main menu has four buttons: Add Workout, View Workouts,
+    Track Progress, and Save and Exit.
+"""
+# This will show the main menu, with the different options for the user to use:  
+def main_menu():
+
+    # Workout program Title
+    tk.Label(
+        text="Workout Helper",
+    ).pack(pady=(60, 10))
+
+tk.Button(
+    text="",
+    
+)
 
