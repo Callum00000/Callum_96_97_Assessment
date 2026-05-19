@@ -1,10 +1,10 @@
 import tkinter as tk
 from tkinter import messagebox
 
-# Name of the file that going to beused to store workout data
+# Name of the file that going to beused to store workout data.
 WORKOUT_FILE = "Workouts.txt"
 
-# This list will hold all the workouts as dictionaries
+# This list will hold all the workouts as dictionaries.
 workouts = []
 
 """
@@ -13,12 +13,12 @@ workouts = []
     Each line in the file is stored as: type, date, amount, unit
 """
 def load_workouts():
-    try:# This will try to open and read the workout file
+    try:# This will try to open and read the workout file.
         file = open(WORKOUT_FILE, "r")
         lines = file.readlines()
         file.close()
 
- # This will loop through each line and split it into a dictionary
+ # This will loop through each line and split it into a dictionary.
         for line in lines:
             line = line.strip()
             if line != "":
@@ -30,7 +30,7 @@ def load_workouts():
                     "unit":   parts[3]
                 }
                 workouts.append(workout)
-    except FileNotFoundError:  # If the file doesn't exist yet, the list will stay empty
+    except FileNotFoundError:  # If the file doesn't exist the list will stay empt.y
         workouts = []
 
 """
@@ -43,20 +43,42 @@ def save_workouts():
         file.write(line)
     file.close()
 
+
+def show_frame(frame):
+    for f in all_frames:
+        f.pack_forget()
+    frame.pack(fill="both", expand=True)
+
 """
     The main menu has four buttons: Add Workout, View Workouts,
     Track Progress, and Save and Exit.
 """
-# This will show the main menu, with the different options for the user to use:  
+# This will show the main menu, with the different options for the user to use:  Add workout, View workout, Track Progress, Save & Exit.
 def main_menu():
 
-    # Workout program Title
-    tk.Label(
-        text="Workout Helper",
-    ).pack(pady=(60, 10))
+frame = tk.Frame(root, bg="white")
 
+# Workout program Title
+tk.Label(
+        text="Workout Helper",
+).pack(pady=(60, 10))
+
+# Buttons for the different options in the program
 tk.Button(
-    text="",
-    
+    frame, text="Add Workout",    
+    width=22, pady =8
 )
 
+tk.button(
+    frame, text="View Workout",
+    width=22, pady=8
+)
+
+# This lets the user track their progress throughout their workout.
+
+
+
+
+root = tk.TK()
+root.title("Workout Program")
+root.mainloop
