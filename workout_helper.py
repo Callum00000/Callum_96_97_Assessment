@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 
-# Name of the file that going to beused to store workout data.
+# Name of the file that going to be used to store workout data.
 WORKOUT_FILE = "Workouts.txt"
 
 # This list will hold all the workouts as dictionaries.
@@ -30,11 +30,12 @@ def load_workouts():
                     "unit":   parts[3]
                 }
                 workouts.append(workout)
-    except FileNotFoundError:  # If the file doesn't exist the list will stay empt.y
+    except FileNotFoundError:  # If the file doesn't exist the list will stay empty.
         workouts = []
 
 """
-    Saves all workouts from the list to the text file. Each workout will be saved in one line as: type,date,amount,unit
+    Saves all workouts from the list to the text file. 
+    Each workout will be saved in one line as: type,date,amount,unit
 """
 def save_workouts():
     file = open(WORKOUT_FILE, "w")
@@ -53,7 +54,9 @@ def show_frame(frame):
     The main menu has four buttons: Add Workout, View Workouts,
     Track Progress, and Save and Exit.
 """
-# This will show the main menu, with the different options for the user to use:  Add workout, View workout, Track Progress, Save & Exit.
+
+# This will show the main menu, with the different options for the user to use:  
+# Add workout, View workout, Track Progress, Save & Exit.
 def main_menu():
 
 frame = tk.Frame(root, bg="white")
@@ -63,15 +66,34 @@ tk.Label(
         text="Workout Helper",
 ).pack(pady=(60, 10))
 
-# Buttons for the different options in the program
+# Buttons for the different options in the program:
+# Add workout, View Workout, Track Progress, Save and Exit.
+
 tk.Button(
     frame, text="Add Workout",    
     width=22, pady =8
-)
+).pack(pady=6)
 
 tk.button(
     frame, text="View Workout",
     width=22, pady=8
+).pack(pady=6)
+ 
+tk.Button(
+    frame, text="Track Progress",
+    width=22, pady=8,
+).pack(pady=6)
+
+tk.Button(
+    frame, text="Save and Exit",
+    width=22, pady=8,
+).pack(pady=6)
+
+
+def add_frames():
+    
+ tk.label(
+
 )
 
 # This lets the user track their progress throughout their workout.
