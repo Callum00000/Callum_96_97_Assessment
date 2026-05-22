@@ -50,21 +50,25 @@ def show_frame(frame):
         f.pack_forget()
     frame.pack(fill="both", expand=True)
 
-"""
-    The main menu has four buttons: Add Workout, View Workouts,
-    Track Progress, and Save and Exit.
-"""
 
-# This will show the main menu, with the different options for the user to use:  
-# Add workout, View workout, Track Progress, Save & Exit.
+"""
+    This will show the main menu, with the different options for the user to use:
+    Add workout, View workout, Track Progress, Save & Exit.
+"""
 def main_menu():
 
 frame = tk.Frame(root, bg="white")
 
-# Workout program Title
+# Workout program Title and heading
 tk.Label(
         text="Workout Helper",
 ).pack(pady=(60, 10))
+
+ tk.Label(
+        frame,
+        text="Lets workout",
+    ).pack(pady=(0, 35))
+
 
 # Buttons for the different options in the program:
 # Add workout, View Workout, Track Progress, Save and Exit.
@@ -72,35 +76,73 @@ tk.Label(
 tk.Button(
     frame, text="Add Workout",    
     width=22, pady =8
+    command=lambda: show_frame(add_frame)
 ).pack(pady=6)
 
-tk.button(
+tk.Button(
     frame, text="View Workout",
     width=22, pady=8
+    command=view_workout
 ).pack(pady=6)
  
 tk.Button(
     frame, text="Track Progress",
     width=22, pady=8,
+    command=track_progress
 ).pack(pady=6)
 
 tk.Button(
     frame, text="Save and Exit",
     width=22, pady=8,
+    command=save_and_exit
 ).pack(pady=6)
 
 
-def add_frames():
-    
- tk.label(
 
+
+ """
+ Makes the 'Add Workout' work for the program.
+ Includes input boxes for workout type, date, amount, and units.
+ Checks for errors before saving everything to the workouts list.
+"""
+def add_frames():
+    frame = tk.Frame(root)
+
+    tk.label(
+        frame, text="Add Workout",
+    ).pack(pady=(25, 18))
+
+ # Forms a container using the grid layout
+    form = tk.Frame(frame)
+    form.pack(padx=80)
+
+ # Workout type option
+tk.Label(
+    form, text="Workout Type:", anchor="w" 
+).grid(row=0, column=0, sticky="w", pady=7)
+type_entry = tk.Entry(form, width=26)
+type_entry.grid(row=0, column=1, padx=12, pady=7)
+
+# Setting the Data into a Date, Month, Year
+tk.Label(
+    form, text="Date (DD/MM/YYYY):", anchor="w"
+).grid(row=1, column=0, sticky="w", pady=7)
+date_entry = tk.Entry(form, width=26)
+date_entry.grid(row=1, column=1, padx=12, pady=7)
+
+tk.Label(
+    form, text=""
 )
+
+def view_frames():
+
+
 
 # This lets the user track their progress throughout their workout.
 
 
 
-
+load_workouts()
 root = tk.TK()
 root.title("Workout Program")
 root.mainloop
