@@ -8,7 +8,7 @@ WORKOUT_FILE = "Workouts.txt"
 workouts = []
 
 """
-    This def tries to open the workout file and load data into the list.
+    This function tries to open the workout file and load data into the list.
     If the file doesn't exist yet, the list will stay empty.
     Each line in the file is stored as: type, date, amount, unit
 """
@@ -196,7 +196,7 @@ def saving_data():
 
 
 """
-    Builds and returns the View Workouts frame.
+    This function builds and returns the View Workouts frame.
     Has a text box that gets filled with workout data when opened.
 """
 def view_frames():
@@ -233,12 +233,28 @@ def view_frames():
 def view_screen():
     text_box = view_frame.text_box
  
-# Editing enabled again so they can update the content
+# This enables editing so they can update the content
     text_box.config(state="normal")
     text_box.delete("1.0", tk.END)
-
-
-# This lets the user track their progress throughout their workout.
+    
+#    
+    if len(workouts) == 0:
+        text_box.insert(tk.END, "No workouts logged yet.\n")
+        text_box.insert(tk.END, "Use 'Add Workout' to get started.\n")
+    else: #
+        header = f"  {'Type':<16} {'Date':<14} {'Amount':<10} Unit\n"
+        text_box.insert(tk.END, header)
+        text_box.insert(tk.END, "  " + "-" * 50 + "\n")
+        for w in workouts:
+            line = (
+                f"  {w['type']:<16} {w['date']:<14}"
+                f" {w['amount']:<10} {w['unit']}\n"
+            )
+            text_box.insert(tk.END, line)
+ 
+ #
+    text_box.config(state="disabled")
+    show_frame(view_frame)
 
 
 
