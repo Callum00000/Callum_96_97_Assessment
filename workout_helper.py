@@ -13,7 +13,9 @@ workouts = []
     Each line in the file is stored as: type, date, amount, unit
 """
 def load_workouts():
-    try:# This will try to open and read the workout file.
+# This will try to open and read the workout file.
+    global workouts
+    try:
         file = open(WORKOUT_FILE, "r")
         lines = file.readlines()
         file.close()
@@ -60,16 +62,17 @@ def show_frame(frame):
     Add workout, View workout, Track Progress, Save & Exit.
 """
 def main_menu():
-    frame = tk.Frame(root, bg="white")
+    frame = tk.Frame(root, bg="#f0f0f0")
 
     # Workout program Title and heading
     tk.Label(
-            text="Workout Helper",
+        frame,
+        text="Workout Helper",
     ).pack(pady=(60, 10))
 
     tk.Label(
-            frame,
-            text="Lets workout",
+        frame,
+        text="Lets workout",
     ).pack(pady=(0, 35))
 
 
@@ -85,13 +88,13 @@ def main_menu():
     tk.Button(
         frame, text="View Workout",
         width=22, pady=8,
-        command=view_workout
+        command = view_workout
     ).pack(pady=6)
     
     tk.Button(
         frame, text="Track Progress",
         width=22, pady=8,
-        command=track_progress
+        command = track_progress
     ).pack(pady=6)
 
     tk.Button(
@@ -100,16 +103,17 @@ def main_menu():
         command=save_and_exit
     ).pack(pady=6)
 
+    return frame
 
 """
  Makes the 'Add Workout' work for the program.
  Includes input boxes for workout type, date, amount, and units.
  Checks for errors before saving everything to the workouts list.
 """
-def add_frames():
+def add_frame():
     frame = tk.Frame(root)
 
-    tk.label(
+    tk.Label(
         frame, text="Add Workout",
     ).pack(pady=(25, 18))
 
@@ -133,12 +137,11 @@ def add_frames():
 
 # Asking the amount
     tk.Label(
-        form, text="amount: ", anchor="w"
+        form, text="Amount: ", anchor="w"
     ).grid(row=2, column=0, sticky="w", pady=7)
-
-    tk.Label(
-        form, text="Unit  (km / reps / mins):", anchor="w"
-    ).grid(row=3, column=0, sticky="w", pady=7)
+# Asking the unit 
+    tk.Label(form, text="Unit  (km / reps / mins):", anchor="w"
+        ).grid(row=3, column=0, sticky="w", pady=7)
     unit_entry = tk.Entry(form, width=26)
     unit_entry.grid(row=3, column=1, padx=12, pady=7)
 
@@ -149,9 +152,9 @@ def add_frames():
 """
 def saving_data():
     workout_type = type_entry.get().strip()
-    date= date_entry.get().strip()
-    amount= amount_entry.get().strip()
-    unit= unit_entry.get().strip()
+    date = date_entry.get().strip()
+    amount = amount_entry.get().strip()
+    unit = unit_entry.get().strip()
     if workout_type == "" or date == "" or amount == "" or unit == "":
         messagebox.showerror("Error", "Please fill in all fields.")
         return
@@ -185,7 +188,7 @@ def saving_data():
 
     tk.Button(
         btn_row, text="Save Workout",
-        command=handle_save, width=16, pady=7, fg="white"
+        command = saving_data, width=16, pady=7, fg="white"
     ).pack(side="left", padx=8)
         
     tk.Button(
@@ -199,7 +202,7 @@ def saving_data():
     This function builds and returns the View Workouts frame.
     Has a text box that gets filled with workout data when opened.
 """
-def view_frames():
+def view_workout():
     frame = tk.Frame(root)
     tk.Label(
         frame, text="View Workouts",
@@ -252,13 +255,101 @@ def view_screen():
             )
             text_box.insert(tk.END, line)
  
- #
+ # Disables editing again
     text_box.config(state="disabled")
     show_frame(view_frame)
 
 
+"""
+    This Function builds and returns the Track Progress frame.
+    Has a text box that shows a summary when opened.
+"""
+
+def track_progress():
+    frame = tk.Frame(root, bg="#f0f0f0")
+ 
+    tk.Label(
+        frame, text="Track Progress",
+        font=("Arial", 18, "bold"), bg="#f0f0f0"
+    ).pack(pady=(25, 12))
+ 
+ # This will show a text box for the progress summary
+    progress_text = tk.Text(
+        frame, width=58, height=14,
+        font=("Courier", 10), state="disabled"
+    )
+    progress_text.pack(padx=16)
+
+ # This will store references so progress_screen() can update it
+    frame.progress_text = progress_text
+ 
+    tk.Button(
+        frame, text="Back",
+        command=lambda: show_frame(main_frame),
+        width=10, pady=6
+    ).pack(pady=10)
+    return
+
+"""
+    Checks if there is enough data to show progress.
+    If no workouts logged: shows an insufficient data message.
+    If workouts exist: calculates and displays session counts.
+"""
+
+def progress_screen():
+    p_text = track_progress.progress_text
+    p_text.config(state="normal")
+    p_text.delete("1.0", tk.END)
+
+# Thsi will check if there is enough data
+    if len(workouts) == 0:
+        # If there is not enough data, this mesage will show 
+        p_text.insert(tk.END, " Not enough data to show progress.\n\n")
+        p_text.insert(tk.END, " add at least one workout first.\n")
+    else:
+        # If there's enough data, it will calculate and display the progress 
+        p_text.insert(tk.END, f"  Total sessions logged: {len(workouts)}\n")
+        p_text.insert(tk.END, "  " + "-" * 35 + "\n\n")
+
+# This will count how many sessions per workout type
+        # It uses a dictionary to track counts
+        type_counts = {}
+        for w in workouts:
+            w_type = w["type"]
+            if w_type not in type_counts:
+                type_counts[w_type] = 0
+            type_counts[w_type] += 1
+
+    p_text.insert(tk.END, "  Sessions by type:\n")
+    for w_type, count in type_counts.items():
+        p_text.insert(tk.END, f"    {w_type}: {count} session(s)\n")
+ 
+    # This will disable editing again
+    p_text.config(state="disabled")
+    show_frame(track_progress)
+ 
+"""
+    Saves all workouts to the text file then closes the program.
+"""
+def save_and_exit():
+    save_workouts()
+    messagebox.showinfo("Saved", "Workouts saved!\nGoodbye.")
+    root.destroy()
+  
 
 load_workouts()
-root = tk.TK()
+root = tk.Tk()
 root.title("Workout Program")
-root.mainloop
+
+main_frame = main_menu()
+add_frame = add_frame()
+view_frame = view_workout()
+track_frame = track_progress()
+
+all_frames = [main_frame, add_frame, view_frame, track_frame]
+
+show_frame(main_frame)
+
+root.protocol("WM_DELETE_WINDOW", save_and_exit)
+
+root.mainloop()
