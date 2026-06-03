@@ -139,64 +139,67 @@ def add_frame():
     tk.Label(
         form, text="Amount: ", anchor="w"
     ).grid(row=2, column=0, sticky="w", pady=7)
+    amount_entry = tk.Entry(form, width=26)
+    amount_entry.grid(row=2, column=1, padx=12, pady=7)
 # Asking the unit 
     tk.Label(form, text="Unit  (km / reps / mins):", anchor="w"
         ).grid(row=3, column=0, sticky="w", pady=7)
     unit_entry = tk.Entry(form, width=26)
     unit_entry.grid(row=3, column=1, padx=12, pady=7)
-
-"""
-    Reads the information inputed and checks them to see if they are valid or not.
-    If valid: add to workouts list and show success.
-    If invalid: shows an error message and does not save.
-"""
-def saving_data():
-    workout_type = type_entry.get().strip()
-    date = date_entry.get().strip()
-    amount = amount_entry.get().strip()
-    unit = unit_entry.get().strip()
-    if workout_type == "" or date == "" or amount == "" or unit == "":
-        messagebox.showerror("Error", "Please fill in all fields.")
-        return
-
-  # Checking if the amount is a number 
-    try:
-        float(amount)
-    except ValueError:
-        messagebox.showerror("Error", "Amount must be a number.")
     
-# If it's a Valid input, then add workout to the list 
-    new_workout = {
-        "type":   workout_type,
-        "date":   date,
-        "amount": amount,
-        "unit":   unit
-    }
-    workouts.append(new_workout)
 
+    """
+        Reads the information inputed and checks them to see if they are valid or not.
+        If valid: add to workouts list and show success.
+        If invalid: shows an error message and does not save.
+    """
+    def saving_data():
+        workout_type = type_entry.get()
+        date = date_entry.get()
+        amount = amount_entry.get()
+        unit = unit_entry.get().strip()
+        if workout_type == "" or date == "" or amount == "" or unit == "":
+            messagebox.showerror("Error", "Please fill in all fields.")
+            return
 
-# Clear amount so it's ready for next entry
-    amount_entry.delete(0, tk.END)
-
-# Show success message then go back to main menu
-    messagebox.showinfo("Success", "Workout added successfully!")
-    show_frame(main_frame)
-
-# Save and Back buttons
-    btn_row = tk.Frame(frame)
-    btn_row.pack(pady=18)
-
-    tk.Button(
-        btn_row, text="Save Workout",
-        command = saving_data, width=16, pady=7, fg="white"
-    ).pack(side="left", padx=8)
+    # Checking if the amount is a number 
+        try:
+            float(amount)
+        except ValueError:
+            messagebox.showerror("Error", "Amount must be a number.")
         
-    tk.Button(
-        btn_row, text="Back",
-        command=lambda: show_frame(main_frame),
-        width=10, pady=7
-    ).pack(side="left", padx=8)
+    # If it's a Valid input, then add workout to the list 
+        new_workout = {
+            "type":   workout_type,
+            "date":   date,
+            "amount": amount,
+            "unit":   unit
+        }
+        workouts.append(new_workout)
 
+
+    # Clear amount so it's ready for next entry
+        amount_entry.delete(0, tk.END)
+
+    # Show success message then go back to main menu
+        messagebox.showinfo("Success", "Workout added successfully!")
+        show_frame(main_frame)
+
+    # Save and Back buttons
+        btn_row = tk.Frame(frame)
+        btn_row.pack(pady=18)
+
+        tk.Button(
+            btn_row, text="Save Workout",
+            command = saving_data, width=16, pady=7, fg="white"
+        ).pack(side="left", padx=8)
+            
+        tk.Button(
+            btn_row, text="Back",
+            command=lambda: show_frame(main_frame),
+            width=10, pady=7
+        ).pack(side="left", padx=8)
+    return frame
 
 """
     This function builds and returns the View Workouts frame.
@@ -288,7 +291,7 @@ def track_progress():
         command=lambda: show_frame(main_frame),
         width=10, pady=6
     ).pack(pady=10)
-    return
+    return frame
 
 """
     Checks if there is enough data to show progress.
