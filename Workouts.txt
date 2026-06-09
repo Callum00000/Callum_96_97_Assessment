@@ -1,2 +1,4 @@
 Push Ups|09/06/2026|15|Minutes
 HANDSTAND|0/0/0000|999999|Kilometre
+Push Ups|09/08/2026|30|reps
+Handstand|9/8/26|99999|reps

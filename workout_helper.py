@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
+# To help the dropdown trail
+from tkinter import ttk
 
 # Name of the file that going to be used to store workout data.
 WORKOUT_FILE = "Workouts.txt"
@@ -123,12 +125,20 @@ def add_frame():
     form = tk.Frame(frame)
     form.pack(padx=80)
 
- # Workout type option
+# Trailing for dropdown option
+    tk.Label(form, text="Workout Type:", anchor="w").grid(row=0, column=0, sticky="w", pady=7)
+    type_dropdown = ttk.Combobox(form, values=["Push Ups", "Handstand", "Running", "Weightlifting"], width=23, state="readonly")
+    type_dropdown.grid(row=0, column=1, padx=12, pady=7)
+    type_dropdown.set("Select Type")
+
+    #Orginal Code
+    '''# Workout type option
     tk.Label(
         form, text="Workout Type:", anchor="w" 
     ).grid(row=0, column=0, sticky="w", pady=7)
     type_entry = tk.Entry(form, width=26)
     type_entry.grid(row=0, column=1, padx=12, pady=7)
+    '''
 
 # Setting the Data into a Date, Month, Year
     tk.Label(
@@ -144,12 +154,20 @@ def add_frame():
     amount_entry = tk.Entry(form, width=26)
     amount_entry.grid(row=2, column=1, padx=12, pady=7)
     
-# Asking the unit 
+
+    # Trailing and testing for dropdown
+    tk.Label(form, text="Unit  (km / reps / mins):", anchor="w").grid(row=3, column=0, sticky="w", pady=7)
+    unit_dropdown = ttk.Combobox(form, values=["reps", "mins", "km", "kg"], width=23, state="readonly")
+    unit_dropdown.grid(row=3, column=1, padx=12, pady=7)
+    unit_dropdown.set("Select Unit")
+
+    #Original Code
+    '''# Asking the unit 
     tk.Label(form, text="Unit  (km / reps / mins):", anchor="w"
         ).grid(row=3, column=0, sticky="w", pady=7)
     unit_entry = tk.Entry(form, width=26)
     unit_entry.grid(row=3, column=1, padx=12, pady=7)
-    
+    '''
 
     """
         Reads the information inputed and checks them to see if they are valid or not.
@@ -157,13 +175,23 @@ def add_frame():
         If invalid: shows an error message and does not save.
     """
     def saving_data():
-        workout_type = type_entry.get()
+    # Trailing for dropdown code
+        workout_type = type_dropdown.get()
+        date = date_entry.get()
+        amount = amount_entry.get()
+        unit = unit_dropdown.get().strip()
+        if workout_type == "Select Type" or unit == "Select Unit" or workout_type == "" or date == "" or amount == "" or unit == "":
+            messagebox.showerror("Error", "Please fill in all fields.")
+            return
+
+    # Original code
+        '''workout_type = type_entry.get()
         date = date_entry.get()
         amount = amount_entry.get()
         unit = unit_entry.get().strip()
         if workout_type == "" or date == "" or amount == "" or unit == "":
             messagebox.showerror("Error", "Please fill in all fields.")
-            return
+            return'''
 
     # Checking if the amount is a number 
         try:
