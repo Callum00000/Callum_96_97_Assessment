@@ -85,16 +85,18 @@ def main_menu():
         command=lambda: show_frame(add_frame)
     ).pack(pady=6)
 
+# FIXED: Linked directly to view_screen so the data populates and navigates
     tk.Button(
         frame, text="View Workout",
         width=22, pady=8,
-        command = view_workout
+        command = view_screen
     ).pack(pady=6)
     
+    # FIXED: Linked directly to progress_screen so the stats are compiled and shown
     tk.Button(
         frame, text="Track Progress",
         width=22, pady=8,
-        command = track_progress
+        command = progress_screen
     ).pack(pady=6)
 
     tk.Button(
@@ -141,6 +143,7 @@ def add_frame():
     ).grid(row=2, column=0, sticky="w", pady=7)
     amount_entry = tk.Entry(form, width=26)
     amount_entry.grid(row=2, column=1, padx=12, pady=7)
+    
 # Asking the unit 
     tk.Label(form, text="Unit  (km / reps / mins):", anchor="w"
         ).grid(row=3, column=0, sticky="w", pady=7)
@@ -167,6 +170,7 @@ def add_frame():
             float(amount)
         except ValueError:
             messagebox.showerror("Error", "Amount must be a number.")
+            return # I added this so it stops saving data if it hits an error
         
     # If it's a Valid input, then add workout to the list 
         new_workout = {
@@ -186,19 +190,20 @@ def add_frame():
         show_frame(main_frame)
 
     # Save and Back buttons
-        btn_row = tk.Frame(frame)
-        btn_row.pack(pady=18)
+    # FIX: These buttons are now unindented so they display when the frame loads
+    btn_row = tk.Frame(frame)
+    btn_row.pack(pady=18)
 
-        tk.Button(
-            btn_row, text="Save Workout",
-            command = saving_data, width=16, pady=7, fg="white"
-        ).pack(side="left", padx=8)
-            
-        tk.Button(
-            btn_row, text="Back",
-            command=lambda: show_frame(main_frame),
-            width=10, pady=7
-        ).pack(side="left", padx=8)
+    tk.Button(
+        btn_row, text="Save Workout",
+        command = saving_data, width=16, pady=7, fg="black" # Changed fg to black so text is readable
+    ).pack(side="left", padx=8)
+        
+    tk.Button(
+        btn_row, text="Back",
+        command=lambda: show_frame(main_frame),
+        width=10, pady=7
+    ).pack(side="left", padx=8)
     return frame
 
 """
@@ -300,11 +305,12 @@ def track_progress():
 """
 
 def progress_screen():
-    p_text = track_progress.progress_text
+    # FIXED: Changed from track_progress.progress_text to track_frame.progress_text
+    p_text = track_frame.progress_text
     p_text.config(state="normal")
     p_text.delete("1.0", tk.END)
 
-# Thsi will check if there is enough data
+# This will check if there is enough data
     if len(workouts) == 0:
         # If there is not enough data, this mesage will show 
         p_text.insert(tk.END, " Not enough data to show progress.\n\n")
@@ -329,7 +335,9 @@ def progress_screen():
  
     # This will disable editing again
     p_text.config(state="disabled")
-    show_frame(track_progress)
+
+     # FIXED: Changed from show_frame(track_progress) to show_frame(track_frame)
+    show_frame(track_frame)
  
 """
     Saves all workouts to the text file then closes the program.
