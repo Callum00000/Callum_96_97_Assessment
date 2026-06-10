@@ -81,13 +81,13 @@ def login_screen():
     frame = tk.Frame(root, bg=COLOR_BG)
 
     # Title heading for the member login page
-    tk.Label(frame, text="FITNESS MEMBER LOGIN", font=FONT_TITLE, fg=COLOR_ACCENT, bg=COLOR_BG).pack(pady=(120, 30))
+    tk.Label(frame, text="FITNESS LOGIN", font=FONT_TITLE, fg=COLOR_ACCENT, bg=COLOR_BG).pack(pady=(120, 30))
     
     login_box = tk.Frame(frame, bg=COLOR_CARD, padx=40, pady=30)
     login_box.pack()
 
     # Adds color and layout details to the entry frame
-    tk.Label(login_box, text="Username / Member Name:", font=FONT_LABEL, fg=COLOR_TEXT, bg=COLOR_CARD).pack(anchor="w", pady=5)
+    tk.Label(login_box, text="Enter Name To Begin:", font=FONT_LABEL, fg=COLOR_TEXT, bg=COLOR_CARD).pack(anchor="w", pady=5)
     user_entry = tk.Entry(login_box, font=FONT_ENTRY, width=30)
     user_entry.pack(pady=5)
     
@@ -97,7 +97,7 @@ def login_screen():
 
         # Checks if the entry box is completely blank
         if username == "":
-            messagebox.showerror("Error", "Please enter your member name to start.")
+            messagebox.showerror("Error", "Please enter your name to start.")
             return
         current_user = username
         show_frame(main_frame)
@@ -289,16 +289,18 @@ def add_frame():
     Has a text box that gets filled with workout data when opened.
 """
 def view_workout():
-    frame = tk.Frame(root)
+    frame = tk.Frame(root, bg=COLOR_BG)
     tk.Label(
         frame, text="View Workouts",
-        font=("Arial", 18, "bold")
+        font=FONT_TITLE, fg=COLOR_ACCENT, bg=COLOR_BG
     ).pack(pady=(25, 12))
 
 # Text box to display the workout list
     text_box = tk.Text(
-        frame, width=58, height=14,
-        font=("Courier", 10), state="disabled" # This "disabled" stops the user typing in it
+        frame, width=65, height=14,
+        # This "disabled" stops the user typing in it
+        font=("Courier", 11), state="disabled",
+        bg=COLOR_CARD, fg=COLOR_TEXT, insertbackground=COLOR_TEXT
     )
     text_box.pack(padx=16)
 
@@ -307,8 +309,8 @@ def view_workout():
 
     tk.Button(
         frame, text="Back",
+        font=FONT_BTN, fg=COLOR_TEXT, bg=COLOR_CARD, width=10, pady=6,
         command=lambda: show_frame(main_frame),
-        width=10, pady=6
     ).pack(pady=10)
 
     return frame
@@ -326,9 +328,12 @@ def view_screen():
     text_box.config(state="normal")
     text_box.delete("1.0", tk.END)
     
+    # This gets data matching the logged in user
+    user_data = [w for w in workouts if w.get("user") == current_user]
+
 #    
-    if len(workouts) == 0:
-        text_box.insert(tk.END, "No workouts logged yet.\n")
+    if len(user_data) == 0:
+        text_box.insert(tk.END, "No workouts logged yet for member.\n")
         text_box.insert(tk.END, "Use 'Add Workout' to get started.\n")
     else: #
         header = f"  {'Type':<16} {'Date':<14} {'Amount':<10} Unit\n"
@@ -352,17 +357,18 @@ def view_screen():
 """
 
 def track_progress():
-    frame = tk.Frame(root, bg="#f0f0f0")
+    frame = tk.Frame(root, bg=COLOR_BG)
  
     tk.Label(
-        frame, text="Track Progress",
-        font=("Arial", 18, "bold"), bg="#f0f0f0"
+        frame, text="Track Progress Results",
+        font=FONT_TITLE, fg=COLOR_ACCENT , bg=COLOR_BG
     ).pack(pady=(25, 12))
  
  # This will show a text box for the progress summary
     progress_text = tk.Text(
-        frame, width=58, height=14,
-        font=("Courier", 10), state="disabled"
+        frame, width=65, height=14,
+        font=("Courier", 11), state="disabled",
+        bg=COLOR_CARD, fg=COLOR_TEXT
     )
     progress_text.pack(padx=16)
 
@@ -371,8 +377,9 @@ def track_progress():
  
     tk.Button(
         frame, text="Back",
+        font=FONT_BTN, fg=COLOR_TEXT, bg=COLOR_CARD,
         command=lambda: show_frame(main_frame),
-        width=10, pady=6
+        width=10, pady=6,
     ).pack(pady=10)
     return frame
 
@@ -388,28 +395,40 @@ def progress_screen():
     p_text.config(state="normal")
     p_text.delete("1.0", tk.END)
 
+# This filters data so calculations are private to only the user
+    user_data = [w for w in workouts if w.get("user") == current_user]
+
+
 # This will check if there is enough data
-    if len(workouts) == 0:
-        # If there is not enough data, this mesage will show 
-        p_text.insert(tk.END, " Not enough data to show progress.\n\n")
-        p_text.insert(tk.END, " add at least one workout first.\n")
+    if len(user_data) == 0:
+        p_text.insert(tk.END, f"\n  Not enough data to show progress for member: {current_user}.\n\n")
+        p_text.insert(tk.END, "  Add at least one workout first.\n")
     else:
         # If there's enough data, it will calculate and display the progress 
-        p_text.insert(tk.END, f"  Total sessions logged: {len(workouts)}\n")
-        p_text.insert(tk.END, "  " + "-" * 35 + "\n\n")
+        p_text.insert(tk.END, f"  FITNESS LOG ANALYSIS FOR: {current_user.upper()}\n")
+        p_text.insert(tk.END, f"  Total sessions logged: {len(user_data)}\n")
+        p_text.insert(tk.END, "  " + "=" * 52 + "\n\n")
+        p_text.insert(tk.END, f"  {'EXERCISE TYPE':<18} {'SESSIONS':<12} {'PERSONAL RECORD (PR)':<15}\n")
+        p_text.insert(tk.END, "  " + "-" * 52 + "\n")
 
-# This will count how many sessions per workout type
+# This will Scans entries to locate maximum values achieved per exercise type
         # It uses a dictionary to track counts
-        type_counts = {}
-        for w in workouts:
-            w_type = w["type"]
-            if w_type not in type_counts:
-                type_counts[w_type] = 0
-            type_counts[w_type] += 1
+    stats = {}
+    for w in user_data:
+        w_type = w["type"]
+        amount = float(w["amount"])
+        unit = w["unit"]
+            
+        if w_type not in stats:
+                stats[w_type] = {"count": 0, "max_value": amount, "unit": unit}
 
-    p_text.insert(tk.END, "  Sessions by type:\n")
-    for w_type, count in type_counts.items():
-        p_text.insert(tk.END, f"    {w_type}: {count} session(s)\n")
+         # If the current amount is bigger than our old max, overwrite it as the new Personal Record
+        if amount > stats[w_type]["max_value"]:
+            stats[w_type]["max_value"] = amount
+
+    for w_type, data in stats.items():
+        line = f"  {w_type:<18} {data['count']:<12} {data['max_value']} {data['unit']}\n"
+        p_text.insert(tk.END, line)
  
     # This will disable editing again
     p_text.config(state="disabled")
