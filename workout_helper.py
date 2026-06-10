@@ -1,12 +1,28 @@
 import tkinter as tk
 from tkinter import messagebox
-from tkinter import ttk
+from tkinter import ttk # dropdown code option
+from datetime import datetime # Added for calendar checks 
+
+# Version 2 User Tracker
+current_user = ""
 
 # Name of the file that going to be used to store workout data.
 WORKOUT_FILE = "Workouts.txt"
 
 # This list will hold all the workouts as dictionaries.
 workouts = []
+
+# Font sizes increased to be clear and readable while moving around
+FONT_TITLE = ("Arial", 22, "bold")
+FONT_LABEL = ("Arial", 13, "bold")
+FONT_ENTRY = ("Arial", 12)
+FONT_BTN = ("Arial", 12, "bold")
+
+# High-energy fitness app color scheme
+COLOR_BG = "#1e293b"        # Dark slate blue for the background
+COLOR_CARD = "#334155"      # Lighter slate blue for the containers
+COLOR_TEXT = "#ffffff"      # High contrast white for the text
+COLOR_ACCENT = "#0ea5e9"    # Neon blue for the buttons
 
 """
     This function tries to open the workout file and load data into the list.
@@ -57,7 +73,49 @@ def show_frame(frame):
         f.pack_forget()
     frame.pack(fill="both", expand=True)
 
+"""
+    This will show a personalised login and signup page for fitness members on startup.
+    It securely captures the username so individual profiles can manage their own data.
+"""
+def login_screen():
+    frame = tk.Frame(root, bg=COLOR_BG)
 
+    # Title heading for the member login page
+    tk.Label(frame, text="FITNESS MEMBER LOGIN", font=FONT_TITLE, fg=COLOR_ACCENT, bg=COLOR_BG).pack(pady=(120, 30))
+    
+    login_box = tk.Frame(frame, bg=COLOR_CARD, padx=40, pady=30)
+    login_box.pack()
+
+    # Adds color and layout details to the entry frame
+    tk.Label(login_box, text="Username / Member Name:", font=FONT_LABEL, fg=COLOR_TEXT, bg=COLOR_CARD).pack(anchor="w", pady=5)
+    user_entry = tk.Entry(login_box, font=FONT_ENTRY, width=30)
+    user_entry.pack(pady=5)
+    
+    def process_login():
+        global current_user
+        username = user_entry.get().strip()
+
+        # Checks if the entry box is completely blank
+        if username == "":
+            messagebox.showerror("Error", "Please enter your member name to start.")
+            return
+        current_user = username
+        show_frame(main_frame)
+
+    # Button that checks entry data and unlocks the main program
+    tk.Button(frame, text="Enter Program", font=FONT_BTN, fg=COLOR_TEXT, bg=COLOR_ACCENT, width=20, pady=8, command=process_login).pack(pady=30)
+    return frame
+
+"""
+    Wipes all previously inputted data from the form fields.
+    This resets dropdowns and text boxes before loading the add workout screen.
+"""
+def reset_input():
+    ropdown.set("Select Type")
+    date_entry.delete(0, tk.END)
+    amount_entry.delete(0, tk.END)
+    unit_dropdown.set("Select Unit")
+    show_frame(add_frame)
 """
     This will show the main menu, with the different options for the user to use:
     Add workout, View workout, Track Progress, Save & Exit.
@@ -114,19 +172,22 @@ def main_menu():
  Checks for errors before saving everything to the workouts list.
 """
 def add_frame():
-    frame = tk.Frame(root)
+    global type_dropdown, date_entry, amount_entry, unit_dropdown
+
+    frame = tk.Frame(root, bg=COLOR_BG)
 
     tk.Label(
         frame, text="Add Workout",
+        font=FONT_TITLE, fg=COLOR_ACCENT, bg=COLOR_BG
     ).pack(pady=(25, 18))
 
  # Forms a container using the grid layout
-    form = tk.Frame(frame)
+    form = tk.Frame(frame, bg=COLOR_CARD, padx=40, pady=25)
     form.pack(padx=80)
 
 # Dropdown code for workout option selection
-    tk.Label(form, text="Workout Type:", anchor="w").grid(row=0, column=0, sticky="w", pady=7)
-    type_dropdown = ttk.Combobox(form, values=["Push Ups", "Handstand", "Running", "Weightlifting"], width=23, state="readonly")
+    tk.Label(form, text="Workout Type:", font=FONT_LABEL, fg=COLOR_TEXT, bg=COLOR_CARD, anchor="w").grid(row=0, column=0, sticky="w", pady=7)
+    type_dropdown = ttk.Combobox(form, values=["Push Ups", "Handstand", "Running", "Weightlifting", "Squats", "Cycling", "Pull Ups"], width=23, state="readonly")
     type_dropdown.grid(row=0, column=1, padx=12, pady=7)
     type_dropdown.set("Select Type")
 
@@ -137,17 +198,28 @@ def add_frame():
     date_entry = tk.Entry(form, width=26)
     date_entry.grid(row=1, column=1, padx=12, pady=7)
 
+# This will automatically adds slashes as the user types 
+    def auto_slash(event):
+        if event.keysym == "Backspace":
+            return
+        cur_text = date_entry.get()
+        if len(cur_text) == 2 or len(cur_text) == 5:
+            date_entry.insert(tk.END, "/")
+
+# This binds the keyboard event to the date text box
+    date_entry.bind("<KeyRelease>", auto_slash)
+
 # Asking the amount
     tk.Label(
-        form, text="Amount: ", anchor="w"
+        form, text="Amount: ", font=FONT_LABEL, fg=COLOR_TEXT, bg=COLOR_CARD, anchor="w"
     ).grid(row=2, column=0, sticky="w", pady=7)
-    amount_entry = tk.Entry(form, width=26)
+    amount_entry = tk.Entry(form,  font=FONT_ENTRY, width=26)
     amount_entry.grid(row=2, column=1, padx=12, pady=7)
     
 
     # Dropdown Code for Unit selection
     tk.Label(form, text="Unit  (km / reps / mins):", anchor="w").grid(row=3, column=0, sticky="w", pady=7)
-    unit_dropdown = ttk.Combobox(form, values=["reps", "mins", "km", "kg"], width=23, state="readonly")
+    unit_dropdown = ttk.Combobox(form,  font=FONT_ENTRY, values=["reps", "mins", "km", "kg",  "lbs", "meters"], width=23, state="readonly")
     unit_dropdown.grid(row=3, column=1, padx=12, pady=7)
     unit_dropdown.set("Select Unit")
 
@@ -166,25 +238,31 @@ def add_frame():
             messagebox.showerror("Error", "Please fill in all fields.")
             return
 
-    # Checking if the amount is a number 
+    # Checking if the calendar is using datetime to stop impossible dates
+        try:
+            datetime.strptime(date, "%d/%m/%Y")
+        except ValueError:
+            messagebox.showerror("Error", "Please enter a valid, real calendar date.")
+            return 
+
+    # Checking if the amount is a valid number 
         try:
             float(amount)
         except ValueError:
             messagebox.showerror("Error", "Amount must be a number.")
             return # I added this so it stops saving data if it hits an error
-        
+
+
     # If it's a Valid input, then add workout to the list 
         new_workout = {
+            "user":   current_user,
             "type":   workout_type,
             "date":   date,
             "amount": amount,
             "unit":   unit
         }
         workouts.append(new_workout)
-
-
-    # Clear amount so it's ready for next entry
-        amount_entry.delete(0, tk.END)
+        save_workouts()
 
     # Show success message then go back to main menu
         messagebox.showinfo("Success", "Workout added successfully!")
@@ -192,18 +270,17 @@ def add_frame():
 
     # Save and Back buttons
     # FIXED: These buttons are now unindented so they display when the frame loads
-    btn_row = tk.Frame(frame)
+    btn_row = tk.Frame(frame, bg=COLOR_BG)
     btn_row.pack(pady=18)
 
     tk.Button(
-        btn_row, text="Save Workout",
-        command = saving_data, width=16, pady=7, fg="black" # Changed fg to black so text is readable
+        btn_row, text="Save Workout", font=FONT_BTN, fg=COLOR_TEXT, bg=COLOR_ACCENT, width=16, pady=7,
+        command = saving_data, 
     ).pack(side="left", padx=8)
         
     tk.Button(
-        btn_row, text="Back",
+        btn_row, text="Back", font=FONT_BTN, fg=COLOR_TEXT, bg=COLOR_CARD, width=10, pady=7,
         command=lambda: show_frame(main_frame),
-        width=10, pady=7
     ).pack(side="left", padx=8)
     return frame
 
@@ -353,14 +430,23 @@ load_workouts()
 root = tk.Tk()
 root.title("Workout Program")
 
+# FIXED: Automatically launches the app window fully maximized on startup
+root.state('zoomed')
+
+# Sets the style parameters for the standard dropdown menus
+style = ttk.Style()
+style.theme_use('clam')
+style.configure("TCombobox", fieldbackground=COLOR_CARD, background=COLOR_ACCENT, foreground=COLOR_TEXT, arrowcolor=COLOR_TEXT)
+
 main_frame = main_menu()
 add_frame = add_frame()
 view_frame = view_workout()
 track_frame = track_progress()
+login_frame = login_screen()
 
-all_frames = [main_frame, add_frame, view_frame, track_frame]
+all_frames = [main_frame, add_frame, view_frame, track_frame, login_frame]
 
-show_frame(main_frame)
+show_frame(login_frame)
 
 root.protocol("WM_DELETE_WINDOW", save_and_exit)
 
