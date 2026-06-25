@@ -12,6 +12,9 @@ WORKOUT_FILE = "Workouts.txt"
 # This list will hold all the workouts as dictionaries.
 workouts = []
 
+#FIXED: This will define the all_frame function
+all_frames = []
+
 # Font sizes increased to be clear and readable while moving around
 FONT_TITLE = ("Arial", 22, "bold")
 FONT_LABEL = ("Arial", 13, "bold")
@@ -19,10 +22,22 @@ FONT_ENTRY = ("Arial", 12)
 FONT_BTN = ("Arial", 12, "bold")
 
 # High-energy fitness app color scheme
-COLOR_BG = "#1e293b"        # Dark slate blue for the background
-COLOR_CARD = "#334155"      # Lighter slate blue for the containers
-COLOR_TEXT = "#ffffff"      # High contrast white for the text
-COLOR_ACCENT = "#0ea5e9"    # Neon blue for the buttons
+COLOUR_BG = "#1e293b"        # Dark slate blue for the background
+COLOUR_CARD = "#334155"      # Lighter slate blue for the containers
+COLOUR_TEXT = "#ffffff"      # High contrast white for the text
+COLOUR_ACCENT = "#0ea5e9"    # Neon blue for the buttons
+
+def reset_and_go_home():
+    # Making this function'global' will make any function that calls on it find it.
+    global type_dropdown, date_entry, amount_entry, unit_dropdown
+    
+    type_dropdown.set("Select Type")
+    date_entry.delete(0, tk.END)
+    amount_entry.delete(0, tk.END)
+    unit_dropdown.set("Select Unit")
+    
+    # Takes the user back to the main menu
+    show_frame(main_frame)
 
 """
     This function tries to open the workout file and load data into the list.
@@ -78,16 +93,16 @@ def show_frame(frame):
     It securely captures the username so individual profiles can manage their own data.
 """
 def login_screen():
-    frame = tk.Frame(root, bg=COLOR_BG)
+    frame = tk.Frame(root, bg=COLOUR_BG)
 
     # Title heading for the member login page
-    tk.Label(frame, text="FITNESS LOGIN", font=FONT_TITLE, fg=COLOR_ACCENT, bg=COLOR_BG).pack(pady=(120, 30))
+    tk.Label(frame, text="FITNESS LOGIN", font=FONT_TITLE, fg=COLOUR_ACCENT, bg=COLOUR_BG).pack(pady=(120, 30))
     
-    login_box = tk.Frame(frame, bg=COLOR_CARD, padx=40, pady=30)
+    login_box = tk.Frame(frame, bg=COLOUR_CARD, padx=40, pady=30)
     login_box.pack()
 
     # Adds color and layout details to the entry frame
-    tk.Label(login_box, text="Enter Name To Begin:", font=FONT_LABEL, fg=COLOR_TEXT, bg=COLOR_CARD).pack(anchor="w", pady=5)
+    tk.Label(login_box, text="Enter Name To Begin:", font=FONT_LABEL, fg=COLOUR_TEXT, bg=COLOUR_CARD).pack(anchor="w", pady=5)
     user_entry = tk.Entry(login_box, font=FONT_ENTRY, width=30)
     user_entry.pack(pady=5)
     
@@ -103,35 +118,31 @@ def login_screen():
         show_frame(main_frame)
 
     # Button that checks entry data and unlocks the main program
-    tk.Button(frame, text="Enter Program", font=FONT_BTN, fg=COLOR_TEXT, bg=COLOR_ACCENT, width=20, pady=8, command=process_login).pack(pady=30)
+    tk.Button(frame, text="Enter Program", font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_ACCENT, width=20, pady=8, command=process_login).pack(pady=30)
     return frame
 
-"""
-    Wipes all previously inputted data from the form fields.
-    This resets dropdowns and text boxes before loading the add workout screen.
-"""
-def reset_input():
-    ropdown.set("Select Type")
-    date_entry.delete(0, tk.END)
-    amount_entry.delete(0, tk.END)
-    unit_dropdown.set("Select Unit")
-    show_frame(add_frame)
 """
     This will show the main menu, with the different options for the user to use:
     Add workout, View workout, Track Progress, Save & Exit.
 """
 def main_menu():
-    frame = tk.Frame(root, bg="#f0f0f0")
+    frame = tk.Frame(root, bg=COLOUR_BG)
 
     # Workout program Title and heading
     tk.Label(
         frame,
         text="Workout Helper",
+        font=FONT_TITLE,
+        fg=COLOUR_TEXT,
+        bg=COLOUR_BG
     ).pack(pady=(60, 10))
 
     tk.Label(
         frame,
         text="Lets workout",
+         font=FONT_LABEL,
+        fg=COLOUR_ACCENT,
+        bg=COLOUR_BG
     ).pack(pady=(0, 35))
 
 
@@ -141,6 +152,8 @@ def main_menu():
     tk.Button(
         frame, text="Add Workout",    
         width=22, pady=8,
+        font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_CARD,
+        activebackground=COLOUR_ACCENT, activeforeground=COLOUR_TEXT,
         command=lambda: show_frame(add_frame)
     ).pack(pady=6)
 
@@ -148,6 +161,8 @@ def main_menu():
     tk.Button(
         frame, text="View Workout",
         width=22, pady=8,
+        font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_CARD,
+        activebackground=COLOUR_ACCENT, activeforeground=COLOUR_TEXT,
         command = view_screen
     ).pack(pady=6)
     
@@ -155,12 +170,16 @@ def main_menu():
     tk.Button(
         frame, text="Track Progress",
         width=22, pady=8,
+        font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_CARD,
+        activebackground=COLOUR_ACCENT, activeforeground=COLOUR_TEXT,
         command = progress_screen
     ).pack(pady=6)
 
     tk.Button(
         frame, text="Save and Exit",
         width=22, pady=8,
+        font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_CARD,
+        activebackground=COLOUR_ACCENT, activeforeground=COLOUR_TEXT,
         command=save_and_exit
     ).pack(pady=6)
 
@@ -171,31 +190,43 @@ def main_menu():
  Includes input boxes for workout type, date, amount, and units.
  Checks for errors before saving everything to the workouts list.
 """
-def add_frame():
+def add_workout():
+ 
+# This will set up a style controller for the dropdown boxes
+    style = ttk.Style()
+    style.theme_use('clam') #'clam' will allow a custom colouring of dropdown fields
+    
+# This will make the Combobox style to be more readable
+    style.configure("TCombobox", # FIXED: I added "font=FONT_ENTRY" inside the style configure to force the dropdown text 
+                    fieldbackground="#ffffff", # Makes the field box pure white
+                    foreground="#000000", # Makes the text bold pure black
+                    background=COLOUR_ACCENT, # Makes the arrow button neon blue
+                    font=FONT_ENTRY)
+
     global type_dropdown, date_entry, amount_entry, unit_dropdown
 
-    frame = tk.Frame(root, bg=COLOR_BG)
+    frame = tk.Frame(root, bg=COLOUR_BG)
 
     tk.Label(
         frame, text="Add Workout",
-        font=FONT_TITLE, fg=COLOR_ACCENT, bg=COLOR_BG
+        font=FONT_TITLE, fg=COLOUR_ACCENT, bg=COLOUR_BG
     ).pack(pady=(25, 18))
 
  # Forms a container using the grid layout
-    form = tk.Frame(frame, bg=COLOR_CARD, padx=40, pady=25)
+    form = tk.Frame(frame, bg=COLOUR_CARD, padx=40, pady=25)
     form.pack(padx=80)
 
 # Dropdown code for workout option selection
-    tk.Label(form, text="Workout Type:", font=FONT_LABEL, fg=COLOR_TEXT, bg=COLOR_CARD, anchor="w").grid(row=0, column=0, sticky="w", pady=7)
-    type_dropdown = ttk.Combobox(form, values=["Push Ups", "Handstand", "Running", "Weightlifting", "Squats", "Cycling", "Pull Ups"], width=23, state="readonly")
+    tk.Label(form, text="Workout Type:", font=FONT_LABEL, fg=COLOUR_TEXT, bg=COLOUR_CARD, anchor="w").grid(row=0, column=0, sticky="w", pady=7)
+    type_dropdown = ttk.Combobox(form, values=["Push Ups", "Handstand", "Running", "Weightlifting", "Squats", "Cycling", "Pull Ups"], width=24, state="readonly") #FIXED: Adjusted width to 24 so it lines up with entry fields perfectly
     type_dropdown.grid(row=0, column=1, padx=12, pady=7)
     type_dropdown.set("Select Type")
 
 # Setting the Data into a Date, Month, Year
-    tk.Label(
-        form, text="Date (DD/MM/YYYY):", anchor="w"
+    tk.Label( #FIXED: Added font, fg, and bg to this label
+        form, text="Date (DD/MM/YYYY):", font=FONT_LABEL, fg=COLOUR_TEXT, bg=COLOUR_CARD, anchor="w",
     ).grid(row=1, column=0, sticky="w", pady=7)
-    date_entry = tk.Entry(form, width=26)
+    date_entry = tk.Entry(form, font=FONT_ENTRY, width=26) # FIXED: added Font
     date_entry.grid(row=1, column=1, padx=12, pady=7)
 
 # This will automatically adds slashes as the user types 
@@ -211,15 +242,16 @@ def add_frame():
 
 # Asking the amount
     tk.Label(
-        form, text="Amount: ", font=FONT_LABEL, fg=COLOR_TEXT, bg=COLOR_CARD, anchor="w"
+        form, text="Amount: ", font=FONT_LABEL, fg=COLOUR_TEXT, bg=COLOUR_CARD, anchor="w"
     ).grid(row=2, column=0, sticky="w", pady=7)
     amount_entry = tk.Entry(form,  font=FONT_ENTRY, width=26)
     amount_entry.grid(row=2, column=1, padx=12, pady=7)
     
 
     # Dropdown Code for Unit selection
-    tk.Label(form, text="Unit  (km / reps / mins):", anchor="w").grid(row=3, column=0, sticky="w", pady=7)
-    unit_dropdown = ttk.Combobox(form,  font=FONT_ENTRY, values=["reps", "mins", "km", "kg",  "lbs", "meters"], width=23, state="readonly")
+    # FIXED: Added font, fg and bg properties to this label. As well as removed font=FONT_ENTRY
+    tk.Label(form, text="Unit  (km / reps / mins):",  font=FONT_LABEL, fg=COLOUR_TEXT, bg=COLOUR_CARD, anchor="w").grid(row=3, column=0, sticky="w", pady=7)
+    unit_dropdown = ttk.Combobox(form, values=["reps", "mins", "km", "kg",  "lbs", "meters"], width=24, state="readonly") #FIXED: Adjusted width to 24
     unit_dropdown.grid(row=3, column=1, padx=12, pady=7)
     unit_dropdown.set("Select Unit")
 
@@ -234,6 +266,7 @@ def add_frame():
         date = date_entry.get()
         amount = amount_entry.get()
         unit = unit_dropdown.get().strip()
+
         if workout_type == "Select Type" or unit == "Select Unit" or workout_type == "" or date == "" or amount == "" or unit == "":
             messagebox.showerror("Error", "Please fill in all fields.")
             return
@@ -266,21 +299,22 @@ def add_frame():
 
     # Show success message then go back to main menu
         messagebox.showinfo("Success", "Workout added successfully!")
-        show_frame(main_frame)
+    
+        reset_and_go_home()
 
     # Save and Back buttons
     # FIXED: These buttons are now unindented so they display when the frame loads
-    btn_row = tk.Frame(frame, bg=COLOR_BG)
+    btn_row = tk.Frame(frame, bg=COLOUR_BG)
     btn_row.pack(pady=18)
 
     tk.Button(
-        btn_row, text="Save Workout", font=FONT_BTN, fg=COLOR_TEXT, bg=COLOR_ACCENT, width=16, pady=7,
+        btn_row, text="Save Workout", font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_ACCENT, width=16, pady=7,
         command = saving_data, 
     ).pack(side="left", padx=8)
         
     tk.Button(
-        btn_row, text="Back", font=FONT_BTN, fg=COLOR_TEXT, bg=COLOR_CARD, width=10, pady=7,
-        command=lambda: show_frame(main_frame),
+        btn_row, text="Back", font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_CARD, width=10, pady=7,
+        command=reset_and_go_home,
     ).pack(side="left", padx=8)
     return frame
 
@@ -289,10 +323,10 @@ def add_frame():
     Has a text box that gets filled with workout data when opened.
 """
 def view_workout():
-    frame = tk.Frame(root, bg=COLOR_BG)
+    frame = tk.Frame(root, bg=COLOUR_BG)
     tk.Label(
         frame, text="View Workouts",
-        font=FONT_TITLE, fg=COLOR_ACCENT, bg=COLOR_BG
+        font=FONT_TITLE, fg=COLOUR_ACCENT, bg=COLOUR_BG
     ).pack(pady=(25, 12))
 
 # Text box to display the workout list
@@ -300,7 +334,7 @@ def view_workout():
         frame, width=65, height=14,
         # This "disabled" stops the user typing in it
         font=("Courier", 11), state="disabled",
-        bg=COLOR_CARD, fg=COLOR_TEXT, insertbackground=COLOR_TEXT
+        bg=COLOUR_CARD, fg=COLOUR_TEXT, insertbackground=COLOUR_TEXT
     )
     text_box.pack(padx=16)
 
@@ -309,7 +343,7 @@ def view_workout():
 
     tk.Button(
         frame, text="Back",
-        font=FONT_BTN, fg=COLOR_TEXT, bg=COLOR_CARD, width=10, pady=6,
+        font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_CARD, width=10, pady=6,
         command=lambda: show_frame(main_frame),
     ).pack(pady=10)
 
@@ -329,9 +363,9 @@ def view_screen():
     text_box.delete("1.0", tk.END)
     
     # This gets data matching the logged in user
-    user_data = [w for w in workouts if w.get("user") == current_user]
+    user_data = [w for w in workouts if w.get("user", "test") == current_user or current_user == "test"]
 
-#    
+# This will check if there is enough data
     if len(user_data) == 0:
         text_box.insert(tk.END, "No workouts logged yet for member.\n")
         text_box.insert(tk.END, "Use 'Add Workout' to get started.\n")
@@ -339,7 +373,7 @@ def view_screen():
         header = f"  {'Type':<16} {'Date':<14} {'Amount':<10} Unit\n"
         text_box.insert(tk.END, header)
         text_box.insert(tk.END, "  " + "-" * 50 + "\n")
-        for w in workouts:
+        for w in user_data:
             line = (
                 f"  {w['type']:<16} {w['date']:<14}"
                 f" {w['amount']:<10} {w['unit']}\n"
@@ -357,18 +391,18 @@ def view_screen():
 """
 
 def track_progress():
-    frame = tk.Frame(root, bg=COLOR_BG)
+    frame = tk.Frame(root, bg=COLOUR_BG)
  
     tk.Label(
         frame, text="Track Progress Results",
-        font=FONT_TITLE, fg=COLOR_ACCENT , bg=COLOR_BG
+        font=FONT_TITLE, fg=COLOUR_ACCENT , bg=COLOUR_BG
     ).pack(pady=(25, 12))
  
  # This will show a text box for the progress summary
     progress_text = tk.Text(
         frame, width=65, height=14,
         font=("Courier", 11), state="disabled",
-        bg=COLOR_CARD, fg=COLOR_TEXT
+        bg=COLOUR_CARD, fg=COLOUR_TEXT
     )
     progress_text.pack(padx=16)
 
@@ -377,8 +411,8 @@ def track_progress():
  
     tk.Button(
         frame, text="Back",
-        font=FONT_BTN, fg=COLOR_TEXT, bg=COLOR_CARD,
-        command=lambda: show_frame(main_frame),
+        font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_CARD,
+        command=reset_and_go_home,  # FIXED: I took away the lambda block so the global function works properly
         width=10, pady=6,
     ).pack(pady=10)
     return frame
@@ -396,7 +430,7 @@ def progress_screen():
     p_text.delete("1.0", tk.END)
 
 # This filters data so calculations are private to only the user
-    user_data = [w for w in workouts if w.get("user") == current_user]
+    user_data = [w for w in workouts if w.get("user", "test") == current_user or current_user == "test"] # FIXED: I add a keyword to check old historical data so the lines load for "test"
 
 
 # This will check if there is enough data
@@ -413,18 +447,21 @@ def progress_screen():
 
 # This will Scans entries to locate maximum values achieved per exercise type
         # It uses a dictionary to track counts
-    stats = {}
-    for w in user_data:
-        w_type = w["type"]
-        amount = float(w["amount"])
-        unit = w["unit"]
-            
-        if w_type not in stats:
-                stats[w_type] = {"count": 0, "max_value": amount, "unit": unit}
+        stats = {}  # FIXED: I added this loop inside the else statement block
+        for w in user_data:
+            w_type = w["type"]
+            amount = float(w["amount"])
+            unit = w["unit"]
+                
+            if w_type not in stats:
+                    stats[w_type] = {"count": 0, "max_value": amount, "unit": unit}
 
-         # If the current amount is bigger than our old max, overwrite it as the new Personal Record
-        if amount > stats[w_type]["max_value"]:
-            stats[w_type]["max_value"] = amount
+            # Added session count tracker
+            stats[w_type]["count"] += 1
+
+            # If the current amount is bigger than our old max, overwrite it as the new Personal Record
+            if amount > stats[w_type]["max_value"]:
+                stats[w_type]["max_value"] = amount
 
     for w_type, data in stats.items():
         line = f"  {w_type:<18} {data['count']:<12} {data['max_value']} {data['unit']}\n"
@@ -455,10 +492,17 @@ root.state('zoomed')
 # Sets the style parameters for the standard dropdown menus
 style = ttk.Style()
 style.theme_use('clam')
-style.configure("TCombobox", fieldbackground=COLOR_CARD, background=COLOR_ACCENT, foreground=COLOR_TEXT, arrowcolor=COLOR_TEXT)
+style.configure("TCombobox", fieldbackground=COLOUR_CARD, background=COLOUR_ACCENT, foreground=COLOUR_TEXT, arrowcolor=COLOUR_TEXT)
+
+main_frame = None
+add_frame = None
+view_frame = None
+track_frame = None
+login_frame = None
+all_frames = []
 
 main_frame = main_menu()
-add_frame = add_frame()
+add_frame = add_workout()
 view_frame = view_workout()
 track_frame = track_progress()
 login_frame = login_screen()
