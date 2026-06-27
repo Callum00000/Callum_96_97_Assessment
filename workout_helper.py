@@ -5,9 +5,11 @@ from datetime import datetime # Added for calendar checks
 
 # Version 2 User Tracker
 current_user = ""
+is_guest = False
 
 # Name of the file that going to be used to store workout data.
 WORKOUT_FILE = "Workouts.txt"
+USER_FILE = "Users.txt"
 
 # This list will hold all the workouts as dictionaries.
 workouts = []
@@ -28,13 +30,16 @@ COLOUR_TEXT = "#ffffff"      # High contrast white for the text
 COLOUR_ACCENT = "#0ea5e9"    # Neon blue for the buttons
 
 def reset_and_go_home():
-    # Making this function'global' will make any function that calls on it find it.
+    # Making this function 'global' will make any function that calls on it find it.
     global type_dropdown, date_entry, amount_entry, unit_dropdown
     
-    type_dropdown.set("Select Type")
-    date_entry.delete(0, tk.END)
-    amount_entry.delete(0, tk.END)
-    unit_dropdown.set("Select Unit")
+    try:
+        type_dropdown.set("Select Type")
+        date_entry.delete(0, tk.END)
+        amount_entry.delete(0, tk.END)
+        unit_dropdown.set("Select Unit")
+    except NameError:
+        pass
     
     # Takes the user back to the main menu
     show_frame(main_frame)
@@ -44,9 +49,15 @@ def reset_and_go_home():
     If the file doesn't exist yet, the list will stay empty.
     Each line in the file is stored as: type, date, amount, unit
 """
+"""
+    This function tries to open the workout file and load data into the list.
+    If the file doesn't exist yet, the list will stay empty.
+    Each line in the file is stored as: type, date, amount, unit
+"""
 def load_workouts():
 # This will try to open and read the workout file.
     global workouts
+    workouts = [] # Reset the list every time we reload to avoid double-loading lines
     try:
         file = open(WORKOUT_FILE, "r")
         lines = file.readlines()
@@ -57,12 +68,22 @@ def load_workouts():
             line = line.strip()
             if line != "":
                 parts = line.split("|")
-                workout = {
-                    "type":   parts[0],
-                    "date":   parts[1],
-                    "amount": parts[2],
-                    "unit":   parts[3]
-                }
+                if len(parts) == 4:
+                    workout = {
+                        "user":   "test",
+                        "type":   parts[0],
+                        "date":   parts[1],
+                        "amount": parts[2],
+                        "unit":   parts[3]
+                    }
+                else:
+                    workout = {
+                        "user":   parts[0],
+                        "type":   parts[1],
+                        "date":   parts[2],
+                        "amount": parts[3],
+                        "unit":   parts[4]
+                    }
                 workouts.append(workout)
     except FileNotFoundError:  # If the file doesn't exist the list will stay empty.
         workouts = []
@@ -74,18 +95,28 @@ def load_workouts():
 def save_workouts():
     file = open(WORKOUT_FILE, "w")
     for w in workouts:
-        line = w["type"] + "|" + w["date"] + "|" + w["amount"] + "|" + w["unit"] + "\n"
+        line = f"{w.get('user', 'test')}|{w['type']}|{w['date']}|{w['amount']}|{w['unit']}\n"
         file.write(line)
     file.close()
-
 
 """
     Hides all frames then shows only the one passed in.
     This function helps us switch between screens.
 """
 def show_frame(frame):
+    # This automatically updates the layout entries right when opening a history screen
+    if frame == view_frame:
+        load_workouts()
+        view_screen()
+    elif frame == track_frame:
+        load_workouts()
+        progress_screen()
+
+    # This hides all of the screens first
     for f in all_frames:
         f.pack_forget()
+
+    # This displays the chosen screen
     frame.pack(fill="both", expand=True)
 
 """
@@ -96,29 +127,88 @@ def login_screen():
     frame = tk.Frame(root, bg=COLOUR_BG)
 
     # Title heading for the member login page
-    tk.Label(frame, text="FITNESS LOGIN", font=FONT_TITLE, fg=COLOUR_ACCENT, bg=COLOUR_BG).pack(pady=(120, 30))
+    tk.Label(frame, text="FITNESS LOGIN", font=FONT_TITLE, fg=COLOUR_ACCENT, bg=COLOUR_BG).pack(pady=(100, 25))
     
-    login_box = tk.Frame(frame, bg=COLOUR_CARD, padx=40, pady=30)
+    login_box = tk.Frame(frame, bg=COLOUR_CARD, padx=40, pady=25)
     login_box.pack()
 
     # Adds color and layout details to the entry frame
-    tk.Label(login_box, text="Enter Name To Begin:", font=FONT_LABEL, fg=COLOUR_TEXT, bg=COLOUR_CARD).pack(anchor="w", pady=5)
+    tk.Label(login_box, text="Enter Username:", font=FONT_LABEL, fg=COLOUR_TEXT, bg=COLOUR_CARD).pack(anchor="w", pady=2)
     user_entry = tk.Entry(login_box, font=FONT_ENTRY, width=30)
     user_entry.pack(pady=5)
     
+    # Adds the password entry layout box
+    tk.Label(login_box, text="Enter Password:", font=FONT_LABEL, fg=COLOUR_TEXT, bg=COLOUR_CARD).pack(anchor="w", pady=2)
+    pass_entry = tk.Entry(login_box, font=FONT_ENTRY, width=30, show="*")
+    pass_entry.pack(pady=5)
+    
+    # Code to read account logins from user file
+    def read_accounts():
+        accounts = {}
+        try:
+            with open(USER_FILE, "r") as f:
+                for line in f:
+                    if "|" in line:
+                        u, p = line.strip().split("|")
+                        accounts[u.lower()] = p
+        except FileNotFoundError:
+            pass
+        return accounts
+
     def process_login():
-        global current_user
+        global current_user, is_guest
         username = user_entry.get().strip()
+        password = pass_entry.get().strip()
 
         # Checks if the entry box is completely blank
-        if username == "":
-            messagebox.showerror("Error", "Please enter your name to start.")
+        if username == "" or password == "":
+            messagebox.showerror("Error", "Please fill in all account fields.")
             return
-        current_user = username
+            
+        db = read_accounts()
+        if username.lower() in db and db[username.lower()] == password:
+            current_user = username
+            is_guest = False
+            user_entry.delete(0, tk.END)
+            pass_entry.delete(0, tk.END)
+            show_frame(main_frame)
+        else:
+            messagebox.showerror("Error", "Invalid username credentials or password mismatch.")
+
+    # Code to save a brand new member sign up profile
+    def process_signup():
+        username = user_entry.get().strip()
+        password = pass_entry.get().strip()
+
+        if username == "" or password == "":
+            messagebox.showerror("Error", "Please enter fields to sign up.")
+            return
+        if len(password) < 4:
+            messagebox.showerror("Error", "Password must be at least 4 characters long.")
+            return
+            
+        db = read_accounts()
+        if username.lower() in db:
+            messagebox.showerror("Error", "Username name already taken.")
+            return
+            
+        with open(USER_FILE, "a") as f:
+            f.write(f"{username}|{password}\n")
+        messagebox.showinfo("Success", "Account created successfully! You can now log in.")
+
+    # Guest bypass button action
+    def enter_as_guest():
+        global current_user, is_guest
+        current_user = "Guest"
+        is_guest = True
+        user_entry.delete(0, tk.END)
+        pass_entry.delete(0, tk.END)
         show_frame(main_frame)
 
     # Button that checks entry data and unlocks the main program
-    tk.Button(frame, text="Enter Program", font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_ACCENT, width=20, pady=8, command=process_login).pack(pady=30)
+    tk.Button(frame, text="Log In", font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_ACCENT, width=22, pady=5, command=process_login).pack(pady=5)
+    tk.Button(frame, text="Create Account", font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_CARD, width=22, pady=5, command=process_signup).pack(pady=5)
+    tk.Button(frame, text="Continue as Guest", font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_CARD, width=22, pady=5, command=enter_as_guest).pack(pady=(5, 20))
     return frame
 
 """
@@ -175,6 +265,15 @@ def main_menu():
         command = progress_screen
     ).pack(pady=6)
 
+    # Button to launch accessibility panel options
+    tk.Button(
+        frame, text="Accessibility Settings",
+        width=22, pady=8,
+        font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_CARD,
+        activebackground=COLOUR_ACCENT, activeforeground=COLOUR_TEXT,
+        command=lambda: show_frame(settings_frame)
+    ).pack(pady=6)
+
     tk.Button(
         frame, text="Save and Exit",
         width=22, pady=8,
@@ -197,7 +296,7 @@ def add_workout():
     style.theme_use('clam') #'clam' will allow a custom colouring of dropdown fields
     
 # This will make the Combobox style to be more readable
-    style.configure("TCombobox", # FIXED: I added "font=FONT_ENTRY" inside the style configure to force the dropdown text 
+    style.configure("TCombobox", # FIXED: I added "font=FONT_ENTRY" inside the style configure to force the dropdown text
                     fieldbackground="#ffffff", # Makes the field box pure white
                     foreground="#000000", # Makes the text bold pure black
                     background=COLOUR_ACCENT, # Makes the arrow button neon blue
@@ -229,13 +328,23 @@ def add_workout():
     date_entry = tk.Entry(form, font=FONT_ENTRY, width=26) # FIXED: added Font
     date_entry.grid(row=1, column=1, padx=12, pady=7)
 
-# This will automatically adds slashes as the user types 
+# Track entry length for backspace checks
+    last_length = 0
+
+# This will automatically adds slashes as the user types
     def auto_slash(event):
+        nonlocal last_length
+
+        # FIXED: If backspace is pressed, skip slash and allow easy delete
         if event.keysym == "Backspace":
+            last_length = len(date_entry.get())
             return
+
         cur_text = date_entry.get()
-        if len(cur_text) == 2 or len(cur_text) == 5:
-            date_entry.insert(tk.END, "/")
+        if len(cur_text) > last_length:
+            if len(cur_text) == 2 or len(cur_text) == 5:
+                date_entry.insert(tk.END, "/")
+        last_length = len(date_entry.get())
 
 # This binds the keyboard event to the date text box
     date_entry.bind("<KeyRelease>", auto_slash)
@@ -261,6 +370,11 @@ def add_workout():
         If invalid: shows an error message and does not save.
     """
     def saving_data():
+        if is_guest:
+            messagebox.showwarning("Guest Notice", "Guest profiles cannot save workouts.")
+            reset_and_go_home()
+            return
+
     # Creating the Dropdown code
         workout_type = type_dropdown.get()
         date = date_entry.get()
@@ -273,17 +387,26 @@ def add_workout():
 
     # Checking if the calendar is using datetime to stop impossible dates
         try:
-            datetime.strptime(date, "%d/%m/%Y")
+            parsed_date = datetime.strptime(date, "%d/%m/%Y")
         except ValueError:
             messagebox.showerror("Error", "Please enter a valid, real calendar date.")
             return 
 
+        current_year = datetime.now().year
+        if parsed_date.year < 2024 or parsed_date.year > current_year + 1:
+            messagebox.showerror("Error", f"Please enter a realistic year (between 2024 and {current_year + 1}).")
+            return
+
     # Checking if the amount is a valid number 
         try:
-            float(amount)
+            num_amount = float(amount)
         except ValueError:
             messagebox.showerror("Error", "Amount must be a number.")
             return # I added this so it stops saving data if it hits an error
+
+        if num_amount <= 0 or num_amount > 5000:
+            messagebox.showerror("Error", "Please enter a realistic workout amount.")
+            return
 
 
     # If it's a Valid input, then add workout to the list 
@@ -329,6 +452,16 @@ def view_workout():
         font=FONT_TITLE, fg=COLOUR_ACCENT, bg=COLOUR_BG
     ).pack(pady=(25, 12))
 
+# Dropdown selection code for filtering exercise logs
+    filter_row = tk.Frame(frame, bg=COLOUR_BG)
+    filter_row.pack(pady=5)
+
+    tk.Label(filter_row, text="Filter List:", font=FONT_LABEL, fg=COLOUR_TEXT, bg=COLOUR_BG).pack(side="left", padx=5)
+
+    filter_menu = ttk.Combobox(filter_row, values=["All Workouts", "Push Ups", "Handstand", "Running", "Weightlifting", "Squats", "Cycling", "Pull Ups"], width=20, state="readonly")
+    filter_menu.set("All Workouts")
+    filter_menu.pack(side="left", padx=5)
+
 # Text box to display the workout list
     text_box = tk.Text(
         frame, width=65, height=14,
@@ -340,6 +473,10 @@ def view_workout():
 
 # Store reference to the text box on the frame object,  so view_screen() can update it.
     frame.text_box = text_box
+    frame.filter_menu = filter_menu
+
+# Refresh history grid list every single time the user clicks a dropdown choice
+    filter_menu.bind("<<ComboboxSelected>>", lambda e: view_screen())
 
     tk.Button(
         frame, text="Back",
@@ -357,13 +494,18 @@ def view_workout():
 
 def view_screen():
     text_box = view_frame.text_box
+    filter_selection = view_frame.filter_menu.get()
  
 # This enables editing so they can update the content
     text_box.config(state="normal")
     text_box.delete("1.0", tk.END)
     
     # This gets data matching the logged in user
-    user_data = [w for w in workouts if w.get("user", "test") == current_user or current_user == "test"]
+    user_data = [w for w in workouts if w.get("user", "test").lower() == current_user.lower() or current_user.lower() == "test"]
+
+# Restrict data array if dropdown filter option is active
+    if filter_selection != "All Workouts":
+        user_data = [w for w in user_data if w["type"] == filter_selection]
 
 # This will check if there is enough data
     if len(user_data) == 0:
@@ -386,8 +528,8 @@ def view_screen():
 
 
 """
-    This Function builds and returns the Track Progress frame.
-    Has a text box that shows a summary when opened.
+    This function builds and returns the Track Progress frame.
+    Has a text box that displays analytical counts.
 """
 
 def track_progress():
@@ -412,15 +554,13 @@ def track_progress():
     tk.Button(
         frame, text="Back",
         font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_CARD,
-        command=reset_and_go_home,  # FIXED: I took away the lambda block so the global function works properly
+        command=reset_and_go_home,
         width=10, pady=6,
     ).pack(pady=10)
     return frame
 
 """
-    Checks if there is enough data to show progress.
-    If no workouts logged: shows an insufficient data message.
-    If workouts exist: calculates and displays session counts.
+    Compiles data metrics then switches view frames.
 """
 
 def progress_screen():
@@ -430,7 +570,7 @@ def progress_screen():
     p_text.delete("1.0", tk.END)
 
 # This filters data so calculations are private to only the user
-    user_data = [w for w in workouts if w.get("user", "test") == current_user or current_user == "test"] # FIXED: I add a keyword to check old historical data so the lines load for "test"
+    user_data = [w for w in workouts if w.get("user", "test").lower() == current_user.lower() or current_user.lower() == "test"]
 
 
 # This will check if there is enough data
@@ -463,22 +603,51 @@ def progress_screen():
             if amount > stats[w_type]["max_value"]:
                 stats[w_type]["max_value"] = amount
 
-    for w_type, data in stats.items():
-        line = f"  {w_type:<18} {data['count']:<12} {data['max_value']} {data['unit']}\n"
-        p_text.insert(tk.END, line)
+        for w_type, data in stats.items():
+            line = f"  {w_type:<18} {data['count']:<12} {data['max_value']} {data['unit']}\n"
+            p_text.insert(tk.END, line)
  
     # This will disable editing again
     p_text.config(state="disabled")
 
      # FIXED: Changed from show_frame(track_progress) to show_frame(track_frame)
     show_frame(track_frame)
+
+# Accessibility configuration panel frame layout
+def accessibility_settings():
+    frame = tk.Frame(root, bg=COLOUR_BG)
+
+    tk.Label(frame, text="ACCESSIBILITY", font=FONT_TITLE, fg=COLOUR_ACCENT, bg=COLOUR_BG).pack(pady=40)
+
+    box = tk.Frame(frame, bg=COLOUR_CARD, padx=30, pady=20)
+    box.pack()
+
+    tk.Label(box, text="Accessibility options active.", font=FONT_LABEL, fg=COLOUR_TEXT, bg=COLOUR_CARD).pack(pady=5)
+
+    def toggle_colorblind():
+        global COLOUR_BG, COLOUR_CARD, COLOUR_ACCENT
+        COLOUR_BG = "#0b132b"
+        COLOUR_CARD = "#1c2541"
+        COLOUR_ACCENT = "#f59e0b" # High contrast visual gold yellow
+        messagebox.showinfo("Theme applied", "High Contrast Colorblind Theme applied!")
+        root.configure(bg=COLOUR_BG)
+        show_frame(main_frame)
+
+    tk.Button(box, text="Toggle Colorblind Mode", font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_ACCENT, command=toggle_colorblind).pack(pady=10)
+
+    tk.Button(frame, text="Return to Dashboard", font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_CARD, width=22, command=lambda: show_frame(main_frame)).pack(pady=30)
+
+    return frame
  
 """
     Saves all workouts to the text file then closes the program.
 """
 def save_and_exit():
-    save_workouts()
-    messagebox.showinfo("Saved", "Workouts saved!\nGoodbye.")
+    if not is_guest:
+        save_workouts()
+        messagebox.showinfo("Saved", "Workouts saved!\nGoodbye.")
+    else:
+        messagebox.showinfo("Exit Summary", "Guest session closed.")
     root.destroy()
   
 
@@ -499,6 +668,7 @@ add_frame = None
 view_frame = None
 track_frame = None
 login_frame = None
+settings_frame = None
 all_frames = []
 
 main_frame = main_menu()
@@ -506,8 +676,9 @@ add_frame = add_workout()
 view_frame = view_workout()
 track_frame = track_progress()
 login_frame = login_screen()
+settings_frame = accessibility_settings()
 
-all_frames = [main_frame, add_frame, view_frame, track_frame, login_frame]
+all_frames = [main_frame, add_frame, view_frame, track_frame, login_frame, settings_frame]
 
 show_frame(login_frame)
 
