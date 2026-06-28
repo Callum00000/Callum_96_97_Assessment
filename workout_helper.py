@@ -23,11 +23,15 @@ FONT_LABEL = ("Arial", 13, "bold")
 FONT_ENTRY = ("Arial", 12)
 FONT_BTN = ("Arial", 12, "bold")
 
-# High-energy fitness app color scheme
+# High-energy fitness app colour scheme
 COLOUR_BG = "#1e293b"        # Dark slate blue for the background
 COLOUR_CARD = "#334155"      # Lighter slate blue for the containers
 COLOUR_TEXT = "#ffffff"      # High contrast white for the text
 COLOUR_ACCENT = "#0ea5e9"    # Neon blue for the buttons
+
+# Accessibility options mode trackers
+colourblind_on = False
+big_text_on = False
 
 def reset_and_go_home():
     # Making this function 'global' will make any function that calls on it find it.
@@ -104,14 +108,6 @@ def save_workouts():
     This function helps us switch between screens.
 """
 def show_frame(frame):
-    # This automatically updates the layout entries right when opening a history screen
-    if frame == view_frame:
-        load_workouts()
-        view_screen()
-    elif frame == track_frame:
-        load_workouts()
-        progress_screen()
-
     # This hides all of the screens first
     for f in all_frames:
         f.pack_forget()
@@ -130,9 +126,9 @@ def login_screen():
     tk.Label(frame, text="FITNESS LOGIN", font=FONT_TITLE, fg=COLOUR_ACCENT, bg=COLOUR_BG).pack(pady=(100, 25))
     
     login_box = tk.Frame(frame, bg=COLOUR_CARD, padx=40, pady=25)
-    login_box.pack()
+    
 
-    # Adds color and layout details to the entry frame
+    # Adds colour and layout details to the entry frame
     tk.Label(login_box, text="Enter Username:", font=FONT_LABEL, fg=COLOUR_TEXT, bg=COLOUR_CARD).pack(anchor="w", pady=2)
     user_entry = tk.Entry(login_box, font=FONT_ENTRY, width=30)
     user_entry.pack(pady=5)
@@ -205,10 +201,27 @@ def login_screen():
         pass_entry.delete(0, tk.END)
         show_frame(main_frame)
 
-    # Button that checks entry data and unlocks the main program
-    tk.Button(frame, text="Log In", font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_ACCENT, width=22, pady=5, command=process_login).pack(pady=5)
-    tk.Button(frame, text="Create Account", font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_CARD, width=22, pady=5, command=process_signup).pack(pady=5)
+   
+    # Toggle tools to show the input boxes dynamically when clicked
+    def show_login_inputs():
+        login_box.pack(pady=10)
+        submit_btn.config(text="Log In", command=process_login)
+        submit_btn.pack(pady=15)
+
+    def show_signup_inputs():
+        login_box.pack(pady=10)
+        submit_btn.config(text="Sign Up", command=process_signup)
+        submit_btn.pack(pady=15)
+
+# FIXED: This will make it so when the user first loads into the program they will first see three options
+    # Core selection menu buttons that show on startup
+    tk.Button(frame, text="Log In", font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_CARD, width=22, pady=5, command=show_login_inputs).pack(pady=5)
+    tk.Button(frame, text="Create Account", font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_CARD, width=22, pady=5, command=show_signup_inputs).pack(pady=5)
     tk.Button(frame, text="Continue as Guest", font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_CARD, width=22, pady=5, command=enter_as_guest).pack(pady=(5, 20))
+
+    # This is the dynamic action submission button
+    submit_btn = tk.Button(frame, text="Submit", font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_ACCENT, width=22, pady=5)
+    
     return frame
 
 """
@@ -253,7 +266,7 @@ def main_menu():
         width=22, pady=8,
         font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_CARD,
         activebackground=COLOUR_ACCENT, activeforeground=COLOUR_TEXT,
-        command = view_screen
+        command=view_screen
     ).pack(pady=6)
     
     # FIXED: Linked directly to progress_screen so the stats are compiled and shown
@@ -262,12 +275,12 @@ def main_menu():
         width=22, pady=8,
         font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_CARD,
         activebackground=COLOUR_ACCENT, activeforeground=COLOUR_TEXT,
-        command = progress_screen
+        command=progress_screen
     ).pack(pady=6)
 
-    # Button to launch accessibility panel options
+    # Button to launch settings panel options
     tk.Button(
-        frame, text="Accessibility Settings",
+        frame, text="Settings",
         width=22, pady=8,
         font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_CARD,
         activebackground=COLOUR_ACCENT, activeforeground=COLOUR_TEXT,
@@ -613,29 +626,91 @@ def progress_screen():
      # FIXED: Changed from show_frame(track_progress) to show_frame(track_frame)
     show_frame(track_frame)
 
-# Accessibility configuration panel frame layout
-def accessibility_settings():
+def rebuild_frames():
+    global main_frame, add_frame, view_frame, track_frame, login_frame, settings_frame, all_frames
+
+    # This deletes the old screens so the new colours and fonts can reload
+    for f in all_frames:
+        f.destroy()
+
+    main_frame = main_menu()
+    add_frame = add_workout()
+    view_frame = view_workout()
+    track_frame = track_progress()
+    login_frame = login_screen()
+    settings_frame = settings()
+
+    all_frames = [main_frame, add_frame, view_frame, track_frame, login_frame, settings_frame]
+
+# Settings configuration panel frame layout
+def settings():
     frame = tk.Frame(root, bg=COLOUR_BG)
 
-    tk.Label(frame, text="ACCESSIBILITY", font=FONT_TITLE, fg=COLOUR_ACCENT, bg=COLOUR_BG).pack(pady=40)
+    tk.Label(frame, text="ACCESSIBILITY SETTINGS", font=FONT_TITLE, fg=COLOUR_ACCENT, bg=COLOUR_BG).pack(pady=40)
 
     box = tk.Frame(frame, bg=COLOUR_CARD, padx=30, pady=20)
     box.pack()
 
-    tk.Label(box, text="Accessibility options active.", font=FONT_LABEL, fg=COLOUR_TEXT, bg=COLOUR_CARD).pack(pady=5)
+    tk.Label(box, text="Accessibility settings below.", font=FONT_LABEL, fg=COLOUR_TEXT, bg=COLOUR_CARD).pack(pady=5)
 
-    def toggle_colorblind():
-        global COLOUR_BG, COLOUR_CARD, COLOUR_ACCENT
-        COLOUR_BG = "#0b132b"
-        COLOUR_CARD = "#1c2541"
-        COLOUR_ACCENT = "#f59e0b" # High contrast visual gold yellow
-        messagebox.showinfo("Theme applied", "High Contrast Colorblind Theme applied!")
-        root.configure(bg=COLOUR_BG)
+    def toggle_colourblind():
+        global COLOUR_BG, COLOUR_CARD, COLOUR_ACCENT, colourblind_on
+
+        if colourblind_on == False:
+            COLOUR_BG = "#0b132b"
+            COLOUR_CARD = "#1c2541"
+            COLOUR_ACCENT = "#f59e0b" # High contrast visual gold yellow
+            colourblind_on = True
+            messagebox.showinfo("Theme applied", "High Contrast colourblind Theme applied!")
+        else:
+            COLOUR_BG = "#1e293b"
+            COLOUR_CARD = "#334155"
+            COLOUR_ACCENT = "#0ea5e9" # Original neon blue
+            colourblind_on = False
+            messagebox.showinfo("Theme removed", "Normal colour theme applied!")
+
+        rebuild_frames()
         show_frame(main_frame)
 
-    tk.Button(box, text="Toggle Colorblind Mode", font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_ACCENT, command=toggle_colorblind).pack(pady=10)
+    def make_text_bigger():
+        global FONT_TITLE, FONT_LABEL, FONT_ENTRY, FONT_BTN, big_text_on
 
-    tk.Button(frame, text="Return to Dashboard", font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_CARD, width=22, command=lambda: show_frame(main_frame)).pack(pady=30)
+        if big_text_on == False:
+            FONT_TITLE = ("Arial", 26, "bold")
+            FONT_LABEL = ("Arial", 16, "bold")
+            FONT_ENTRY = ("Arial", 14)
+            FONT_BTN = ("Arial", 14, "bold")
+            big_text_on = True
+            messagebox.showinfo("Text size changed", "Text size has been made bigger!")
+        else:
+            FONT_TITLE = ("Arial", 22, "bold")
+            FONT_LABEL = ("Arial", 13, "bold")
+            FONT_ENTRY = ("Arial", 12)
+            FONT_BTN = ("Arial", 12, "bold")
+            big_text_on = False
+            messagebox.showinfo("Text size changed", "Text size has been returned to normal!")
+
+        rebuild_frames()
+        show_frame(main_frame)
+
+    tk.Button(
+        box, text="Toggle colourblind Mode",
+        font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_ACCENT,
+        command=toggle_colourblind
+    ).pack(pady=10)
+
+    tk.Button(
+        box, text="Toggle Text Size",
+        font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_ACCENT,
+        command=make_text_bigger
+    ).pack(pady=10)
+
+    tk.Button(
+        frame, text="Return to Dashboard",
+        font=FONT_BTN, fg=COLOUR_TEXT, bg=COLOUR_CARD,
+        width=22,
+        command=lambda: show_frame(main_frame)
+    ).pack(pady=30)
 
     return frame
  
@@ -661,7 +736,7 @@ root.state('zoomed')
 # Sets the style parameters for the standard dropdown menus
 style = ttk.Style()
 style.theme_use('clam')
-style.configure("TCombobox", fieldbackground=COLOUR_CARD, background=COLOUR_ACCENT, foreground=COLOUR_TEXT, arrowcolor=COLOUR_TEXT)
+style.configure("TCombobox", fieldbackground=COLOUR_CARD, background=COLOUR_ACCENT, foreground=COLOUR_TEXT, arrowcolour=COLOUR_TEXT)
 
 main_frame = None
 add_frame = None
@@ -676,7 +751,7 @@ add_frame = add_workout()
 view_frame = view_workout()
 track_frame = track_progress()
 login_frame = login_screen()
-settings_frame = accessibility_settings()
+settings_frame = settings()
 
 all_frames = [main_frame, add_frame, view_frame, track_frame, login_frame, settings_frame]
 
